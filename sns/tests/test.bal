@@ -15,6 +15,7 @@
 // under the License.
 
 import ballerina/test;
+import ballerina/os;
 
 configurable string testTopic = os:getEnv("TOPIC_NAME");
 configurable string accessKeyIdId = os:getEnv("ACCESS_KEY_ID");
@@ -49,6 +50,40 @@ function testCreateTopic() {
     }
 }
 
+@test:Config{dependsOn: [testCreateTopic]}
+function testSubscribe() {
+    SubscribeResponse|error response = amazonSNSClient->subscribe(topicArn, EMAIL, "kapilraaj1995@gmail.com", true);
+    if (response is error) {
+        test:assertFail(response.toString());
+    } else {
+        subscriptionArn = response.subscribeResult.subscriptionArn;
+    }
+}
+
+@test:Config{dependsOn: [testSubscribe]}
+function testPublish() {
+    PublishResponse|error response = amazonSNSClient->publish("Notification Message", topicArn);
+    if (response is error) {
+        test:assertFail(response.toString());
+    }
+}
+
+@test:Config{dependsOn: [testPublish]}
+function testUnsubscribe() {
+    UnsubscribeResponse|error response = amazonSNSClient->unsubscribe(subscriptionArn);
+    if (response is error) {
+        test:assertFail(response.toString());
+    }
+}
+
+@test:Config{dependsOn: [testUnsubscribe]}
+function testDeleteTopic() {
+    DeleteTopicResponse|error response = amazonSNSClient->deleteTopic(topicArn);
+    if (response is error) {
+        test:assertFail(response.toString());
+    }
+}
+
 @test:Config{}
 function testGetSMSAttributes() {
     SmsAttribute[]|error response = amazonSNSClient->getSMSAttributes();
@@ -72,40 +107,6 @@ function testCreateSMSSandboxPhoneNumber() {
         test:assertFail(response.toString());
     } else {
         topicArn = response.toString();
-    }
-}
-
-@test:Config{dependsOn: [testCreateTopic]}
-function testSubscribe() {
-    SubscribeResponse|error response = amazonSNSClient->subscribe(topicArn, EMAIL, "kapilraaj1995@gmail.com");
-    if (response is error) {
-        test:assertFail(response.toString());
-    } else {
-        subscriptionArn = response.subscribeResult.subscriptionArn;
-    }
-}
-
-@test:Config{}
-function testPublish() {
-    json|error response = amazonSNSClient->publish("Notification Message", "arn:aws:sns:ap-southeast-1:304758769516:testTopic");
-    if (response is error) {
-        test:assertFail(response.toString());
-    }
-}
-
-@test:Config{dependsOn: [testPublish]}
-function testUnsubscribe() {
-    json|error response = amazonSNSClient->unsubscribe(subscriptionArn);
-    if (response is error) {
-        test:assertFail(response.toString());
-    }
-}
-
-@test:Config{dependsOn: [testUnsubscribe]}
-function testDeleteTopic() {
-    json|error response = amazonSNSClient->deleteTopic(topicArn);
-    if (response is error) {
-        test:assertFail(response.toString());
     }
 }
 

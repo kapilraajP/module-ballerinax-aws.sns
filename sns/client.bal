@@ -65,13 +65,9 @@ public isolated client class Client {
                                          @display {label: "Tags"} map<string>? tags = ()) 
                                          returns @tainted @display {label: "Created Topic ARN"} CreateTopicResponse|error {
         map<string> parameters = {};
-        parameters = buildQueryString("CreateTopic", parameters, name);
-        if (attributes is TopicAttributes) {
-            parameters = setTopicAttributes(parameters, attributes);
-        }
-        if (tags is map<string>) {
-            parameters = setTags(parameters, tags);
-        }
+        parameters = createQueryString("CreateTopic", parameters);
+        parameters["Name"] = name;
+        parameters = check addTopicOptionalParameters(parameters, attributes, tags);
         http:Request|error request = self.generateRequest(self.createPayload(parameters));
         xml response = check sendRequest(self.amazonSNSClient, request);
         CreateTopicResponse|error createdTopicResponse = xmlToCreatedTopic(response);
@@ -98,14 +94,10 @@ public isolated client class Client {
                                        @display {label: "Subscription Attributes"} SubscriptionAttribute? attributes = ()) 
                                        returns @tainted @display {label: "Subscription ARN"} SubscribeResponse|error {
         map<string> parameters = {};
-        parameters = buildQueryString("Subscribe", parameters, topicArn, protocol);
-        parameters = check addOptionalStringParameters(parameters, endpoint);
-        if (returnSubscriptionArn is boolean) {
-            parameters["ReturnSubscriptionArn"] = returnSubscriptionArn.toString();
-        }
-        if (attributes is SubscriptionAttribute) {
-            parameters = setSubscriptionAttributes(parameters, attributes);
-        }
+        parameters = createQueryString("Subscribe", parameters);
+        parameters["TopicArn"] = topicArn;
+        parameters["Protocol"] = protocol;
+        parameters = check addSubscriptionOptionalParameters(parameters, endpoint, returnSubscriptionArn, attributes);
         http:Request|error request = self.generateRequest(self.createPayload(parameters));
         xml response = check sendRequest(self.amazonSNSClient, request);
         SubscribeResponse|error createdSubscriptionResponse = xmlToCreatedSubscription(response);
@@ -140,12 +132,9 @@ public isolated client class Client {
                                      @display {label: "Message Attributes"} MessageAttribute? messageAttributes = ()) 
                                      returns @tainted @display {label: "Published result"} PublishResponse|error {
         map<string> parameters = {};
+        parameters = createQueryString("Publish", parameters);
         parameters["Message"] = message;
-        parameters = buildQueryString("Publish", parameters, message);
-        parameters = check addOptionalStringParameters(parameters, topicArn, targetArn, subject, phoneNumber, messageStructure, messageGroupId, messageDeduplicationId);
-        if (messageAttributes is MessageAttribute) {
-            parameters = setMessageAttributes(parameters, messageAttributes);
-        }
+        parameters = check addPublishOptionalParameters(parameters, topicArn, targetArn, subject, phoneNumber, messageStructure, messageGroupId, messageDeduplicationId, messageAttributes);
         http:Request|error request = self.generateRequest(self.createPayload(parameters));
         xml response = check sendRequest(self.amazonSNSClient, request);
         PublishResponse|error publishResponse = xmlToPublishResponse(response);
@@ -164,7 +153,8 @@ public isolated client class Client {
     isolated remote function unsubscribe(@display {label: "Subscription ARN"} string subscriptionArn) 
                                          returns @tainted @display {label: "Unsubscription Status"} UnsubscribeResponse|error {
         map<string> parameters = {};
-        parameters = buildQueryString("Unsubscribe", parameters, subscriptionArn);
+        parameters = createQueryString("Unsubscribe", parameters);
+        parameters["SubscriptionArn"] = subscriptionArn;
         http:Request|error request = self.generateRequest(self.createPayload(parameters));
         xml response = check sendRequest(self.amazonSNSClient, request);
         UnsubscribeResponse|error unsubscribeResponse = xmlToUnsubscribeResponse(response);
@@ -183,7 +173,8 @@ public isolated client class Client {
     isolated remote function deleteTopic(@display {label: "Topic ARN"} string topicArn) 
                                          returns @tainted @display {label: "Delete Status"} DeleteTopicResponse|error {
         map<string> parameters = {};
-        parameters = buildQueryString("DeleteTopic", parameters, topicArn);
+        parameters = createQueryString("DeleteTopic", parameters);
+        parameters["TopicArn"] = topicArn;
         http:Request|error request = self.generateRequest(self.createPayload(parameters));
         xml response = check sendRequest(self.amazonSNSClient, request);
         DeleteTopicResponse|error deletedResponse = xmlToDeletedTopicResponse(response);
@@ -204,8 +195,9 @@ public isolated client class Client {
                                                          @display {label: "Language Code"} string? languageCode = ()) 
                                                          returns @tainted @display {label: "Created Status"} error? {
         map<string> parameters = {};
-        parameters = buildQueryString("CreateSMSSandboxPhoneNumber", parameters, phoneNumber);
-        parameters = check addOptionalStringParameters(parameters, languageCode);
+        parameters = createQueryString("CreateSMSSandboxPhoneNumber", parameters);
+        parameters["PhoneNumber"] = phoneNumber;
+        parameters = check addCreateSandboxOptionalParameters(parameters, languageCode);
         http:Request|error request = self.generateRequest(self.createPayload(parameters));
         xml response = check sendRequest(self.amazonSNSClient, request);
         error? createSandboxResponse = xmlToHttpResponse(response);

@@ -30,6 +30,75 @@ isolated function buildQueryString(string actionName, map<string> parameterMap, 
     return parameterMap;
 }
 
+isolated function createQueryString(string actionName, map<string> parameterMap) returns @tainted map<string> {
+    int index = 0;
+    string parameterValueString = "";
+    parameterMap[ACTION] = actionName;
+    parameterMap[VERSION] = VERSION_NUMBER;
+    return parameterMap;
+}
+
+isolated function addTopicOptionalParameters(map<string> parameterMap, TopicAttributes? attributes = (), map<string>? tags = ()) returns @tainted map<string>|error {
+    map<string> parameters = {};
+    if (attributes is TopicAttributes) {
+        parameters = setTopicAttributes(parameterMap, attributes);
+    }
+    if (tags is map<string>) {
+        parameters = setTags(parameterMap, tags);
+    }
+    return parameterMap;
+}
+
+isolated function addSubscriptionOptionalParameters(map<string> parameterMap, string? endpoint = (), boolean? returnSubscriptionArn = (), SubscriptionAttribute? attributes = ()) returns @tainted map<string>|error {
+    map<string> parameters = {};
+    if (endpoint is string) {
+        parameterMap["Endpoint"] = endpoint.toString();
+    }
+    if (returnSubscriptionArn is boolean) {
+        parameterMap["ReturnSubscriptionArn"] = returnSubscriptionArn.toString();
+    }
+    if (attributes is SubscriptionAttribute) {
+        parameters = setSubscriptionAttributes(parameterMap, attributes);
+    }
+    return parameterMap;
+}
+
+isolated function addPublishOptionalParameters(map<string> parameterMap, string? topicArn = (), string? targetArn = (), string? subject = (), string? phoneNumber = (), string? messageStructure = (), string? messageDeduplicationId = (), string? messageGroupId = (), MessageAttribute? messageAttributes = ()) returns @tainted map<string>|error {
+    map<string> parameters = {};
+    if (topicArn is string) {
+        parameterMap["TopicArn"] = topicArn.toString();
+    }
+    if (targetArn is string) {
+        parameterMap["TargetArn"] = targetArn.toString();
+    }
+    if (subject is string) {
+        parameterMap["Subject"] = subject.toString();
+    }
+    if (phoneNumber is string) {
+        parameterMap["PhoneNumber"] = phoneNumber.toString();
+    }
+    if (messageStructure is string) {
+        parameterMap["MessageStructure"] = messageStructure.toString();
+    }
+    if (messageDeduplicationId is string) {
+        parameterMap["MessageDeduplicationId"] = messageDeduplicationId.toString();
+    }
+    if (messageGroupId is string) {
+        parameterMap["MessageGroupId"] = messageGroupId.toString();
+    }
+    if (messageAttributes is MessageAttribute) {
+        parameters = setMessageAttributes(parameterMap, messageAttributes);
+    }
+    return parameterMap;
+}
+
+isolated function addCreateSandboxOptionalParameters(map<string> parameterMap, string? languageCode = ()) returns @tainted map<string>|error {
+    if (languageCode is string) {
+        parameterMap["LanguageCode"] = languageCode.toString();
+    }
+    return parameterMap;
+}
+
 isolated function addOptionalStringParameters(map<string> parameterMap, string?... optionalParameterValues) returns @tainted map<string>|error {
     int index = 0;
     string parameterValueString = "";

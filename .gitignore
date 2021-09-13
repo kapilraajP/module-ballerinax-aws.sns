@@ -1,0 +1,15 @@
+# resources folder
+/resources
+
+# idea files
+*.idea
+
+# .ballerina files
+*.ballerina
+.DS_Store
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
